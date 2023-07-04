@@ -17,16 +17,31 @@ typedef struct Data {
     int iNumBlocks;
     int iTagSize;
     int iIndexSize;
-    int iRows;
+    int iNumRows;
     int iOverhead;
     int iMemorySize;
+    int iAccesses;
+    int iHits;
+    int iCompulsoryMisses;
+    int iConflictMisses;
+    int iUnusedSpace;
+    int iUnusedBlocks;
+    
+    double dCost;
+    double dHitRate;
+    double dMissRate;
+    double dCPI;
 } Data;
 
-// Function Prototypes
+// Function Prototypes - main.c
 Data* CreateData(int, char***);
 void GetFileNames(char*, Data**);
-void PrintData(Data**);
-void PrintBytes(int);
+void CacheCalculations(Data**);
 void FreeData(Data**);
 
-void CacheCalculations(Data**);
+// Function Prototypes - cacheSimulation.c
+void CacheSimulation(Data**);
+
+// Function Prototypes - cacheResults.c
+void PrintData(Data**);
+void PrintBytes(int);

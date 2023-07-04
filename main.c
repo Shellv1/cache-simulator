@@ -11,6 +11,8 @@ int main(int argc, char* argv[]) {
 
     CacheCalculations(&oData);
 
+    CacheSimulation(&oData);
+
     PrintData(&oData);
 
     FreeData(&oData);
@@ -28,16 +30,16 @@ Data* CreateData(int argc, char ***argv) {
 
     int i;
 
-    Data* oData = (Data*)malloc(sizeof(Data));
+    Data* oData        = (Data*)malloc(sizeof(Data));
     oData->sTraceFiles = (char**)malloc(sizeof(char*));
 
     for (i=1; i < argc; i+=2) {
         switch ((*argv)[i][1]) {
             case 'f': GetFileNames((*argv)[i+1], &oData);
-            case 's': oData->iCacheSize = atoi((*argv)[i+1]) * 1024;
-            case 'b': oData->iBlockSize = atoi((*argv)[i+1]);
-            case 'a': oData->iAssociativity = atoi((*argv)[i+1]);
-            case 'r': oData->cPolicy = (*argv)[i+1][1];
+            case 's': oData->iCacheSize      = atoi((*argv)[i+1]) * 1024;
+            case 'b': oData->iBlockSize      = atoi((*argv)[i+1]);
+            case 'a': oData->iAssociativity  = atoi((*argv)[i+1]);
+            case 'r': oData->cPolicy         = (*argv)[i+1][1];
             case 'p': oData->iPhysicalMemory = atoi((*argv)[i+1]) * 1024;
         }
     }
@@ -69,77 +71,26 @@ void GetFileNames(char* sFileName, Data **oData) {
 }
 
 /*
-FUNCTION:   PrintData(1)
+FUNCTION:   GetFileNames(1)
     1:      [obj]       'Data' struct
-PURPOSE:    Print data from simulation
+PURPOSE:    Calculate supporting cache information.
 */
-void PrintData(Data **oData) {
+void CacheCalculations(Data **oData) {
 
-    int i;
-    
-    if ((*oData)->sTraceFiles)
-        for (i=0; (*oData)->sTraceFiles[i] != NULL; i++)
-            printf("Trace File %d:             %s\n", i+1, (*oData)->sTraceFiles[i]);
-
-    if ((*oData)->iCacheSize) {
-        printf("Cache Size:               ");
-        PrintBytes((*oData)->iCacheSize);
-    }
-
-    if ((*oData)->iBlockSize)
-        printf("Block Size:               %d Bytes\n", (*oData)->iBlockSize);
-
-    if ((*oData)->iAssociativity)
-        printf("Associativity:            %d\n", (*oData)->iAssociativity);
-
-    if ((*oData)->cPolicy)
-        switch ((*oData)->cPolicy) {
-            case 'R': printf("Replacement Policy:       Random\n"); break;
-            case 'N': printf("Replacement Policy:       Round Robin\n"); break;
-        }
-
-    if ((*oData)->iPhysicalMemory) {
-        printf("Physical Memory:          ");
-        PrintBytes((*oData)->iPhysicalMemory);
-    }
-
-    if ((*oData)->iNumBlocks)
-        printf("Total Blocks:             %d\n", (*oData)->iNumBlocks);
-
-    if ((*oData)->iTagSize)
-        printf("Tag Size:                 %d Bytes\n", (*oData)->iTagSize);
-
-    if ((*oData)->iIndexSize)
-        printf("Index Size:               %d Bits\n", (*oData)->iIndexSize);
-
-    if ((*oData)->iRows)
-        printf("Total Rows:               %d\n", (*oData)->iRows);
-
-    if ((*oData)->iOverhead) {
-        printf("Overhead Size:            ");
-        PrintBytes((*oData)->iOverhead);
-    }
-    if ((*oData)->iMemorySize) {
-        printf("Memory Size:              ");
-        PrintBytes((*oData)->iMemorySize);
-    }
-
-    printf("\n");
-}
-
-/*
-FUNCTION:   PrintBytes(1)
-    1:      [int]       Number of bytes
-PURPOSE:    Print an amount of bytes in KB, MB, or GB
-*/
-void PrintBytes(int iBytes) {
-    switch ((int)(log(iBytes) / log(1024))) {
-        case 0: printf("%d Bytes\n", iBytes); break;
-        case 1: printf("%d KB\n", iBytes / 1024); break;
-        case 2: printf("%d MB\n", iBytes / 1024 / 1024); break;
-        case 3: printf("%d GB\n", iBytes / 1024 / 1024 / 1024); break;
-        default: break;
-    }
+    // [Number of Blocks] = [Cache Size] / [Block Size]
+    (*oData)->iNumBlocks  = (*oData)->iCacheSize / (*oData)->iBlockSize;
+    // [Number of Rows]   = [Number of Blocks] / [Associativity]
+    (*oData)->iNumRows    = (*oData)->iNumBlocks / (*oData)->iAssociativity;
+    // [Index Bits]       = [log_2 of Number of Rows]
+    (*oData)->iIndexBits  = log2((*oData)->iNumRows);
+    // [Tag Bits]         = [32 Bit Bus] - [5 Bits Offset] - [Index Bits]
+    (*oData)->iTagBits    = 27 - (*oData)->iIndexBits;
+    // [Overhead]         = [Tag Size] + [Index Size]
+    (*oData)->iOverhead   = pow(2, (*oData)->iTagBits) + pow(2, (*oData)->iIndexBits);
+    // [Memory Size]      = 
+    (*oData)->iMemorySize = 512;
+    // [Cost]             = [Implementation Memory Size] * [$0.15 per KB]
+    (*oData)->dCost       = (*oData)->iMemorySize * 0.15;
 }
 
 /*
