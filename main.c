@@ -87,10 +87,10 @@ void CacheCalculations(Data **oData) {
     (*oData)->iTagBits    = 27 - (*oData)->iIndexBits;
     // [Overhead]         = [Tag Size] + [Index Size]
     (*oData)->iOverhead   = pow(2, (*oData)->iTagBits) + pow(2, (*oData)->iIndexBits);
-    // [Memory Size]      = 
-    (*oData)->iMemorySize = 512;
-    // [Cost]             = [Implementation Memory Size] * [$0.15 per KB]
-    (*oData)->dCost       = (*oData)->iMemorySize * 0.15;
+    // [Memory Size]      = [Cache Size] + [Overhead]
+    (*oData)->iMemorySize = (*oData)->iCacheSize + (*oData)->iOverhead;
+    // [Cost]             = [Implementation Memory Size (in KB)] * [$0.15 per KB]
+    (*oData)->dCost       = (double)((*oData)->iMemorySize / 1024) * 0.15;
 }
 
 /*

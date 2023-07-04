@@ -15,8 +15,8 @@ typedef struct Data {
     int iAssociativity;
     int iPhysicalMemory;
     int iNumBlocks;
-    int iTagSize;
-    int iIndexSize;
+    int iTagBits;
+    int iIndexBits;
     int iNumRows;
     int iOverhead;
     int iMemorySize;
