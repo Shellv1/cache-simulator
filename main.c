@@ -10,6 +10,7 @@ int main(int argc, char* argv[]) {
     Data* oData = CreateData(argc, &argv);
 
     CacheSimulation(&oData);
+    //SimulationAnalysis(&oData);
 
     PrintData(&oData);
 

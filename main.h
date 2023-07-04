@@ -40,6 +40,9 @@ void FreeData(Data**);
 
 // Function Prototypes - cacheSimulation.c
 void CacheSimulation(Data**);
+void CreateCache();
+void SimulationAnalysis(Data**);
+void FreeCache();
 
 // Function Prototypes - cacheResults.c
 void PrintData(Data**);
