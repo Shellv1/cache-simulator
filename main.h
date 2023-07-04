@@ -36,7 +36,6 @@ typedef struct Data {
 // Function Prototypes - main.c
 Data* CreateData(int, char***);
 void GetFileNames(char*, Data**);
-void CacheCalculations(Data**);
 void FreeData(Data**);
 
 // Function Prototypes - cacheSimulation.c

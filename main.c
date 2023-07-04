@@ -9,8 +9,6 @@ int main(int argc, char* argv[]) {
 
     Data* oData = CreateData(argc, &argv);
 
-    CacheCalculations(&oData);
-
     CacheSimulation(&oData);
 
     PrintData(&oData);
@@ -24,7 +22,8 @@ int main(int argc, char* argv[]) {
 FUNCTION:   CreateData(1, 2)
     1:      [int]       Number of command-line arguments
     2:      [&char**]   Command-line arguments
-PURPOSE:    Dynamically allocate space for specified file names.
+PURPOSE:    Dynamically allocate space for specified file names and
+            calculate cache information.
 */
 Data* CreateData(int argc, char ***argv) {
 
@@ -44,6 +43,21 @@ Data* CreateData(int argc, char ***argv) {
         }
     }
 
+    // [Number of Blocks] = [Cache Size] / [Block Size]
+    oData->iNumBlocks  = oData->iCacheSize / oData->iBlockSize;
+    // [Number of Rows]   = [Number of Blocks] / [Associativity]
+    oData->iNumRows    = oData->iNumBlocks / oData->iAssociativity;
+    // [Index Bits]       = [log_2 of Number of Rows]
+    oData->iIndexBits  = log2(oData->iNumRows);
+    // [Tag Bits]         = [32 Bit Bus] - [5 Bits Offset] - [Index Bits]
+    oData->iTagBits    = 27 - oData->iIndexBits;
+    // [Overhead]         = [Tag Size] + [Index Size]
+    oData->iOverhead   = pow(2, oData->iTagBits) + pow(2, oData->iIndexBits);
+    // [Memory Size]      = [Cache Size] + [Overhead]
+    oData->iMemorySize = oData->iCacheSize + oData->iOverhead;
+    // [Cost]             = [Implementation Memory Size (in KB)] * [$0.15 per KB]
+    oData->dCost       = (double)(oData->iMemorySize / 1024) * 0.15;
+
     return oData;
 }
 
@@ -57,6 +71,7 @@ void GetFileNames(char* sFileName, Data **oData) {
 
     int i, j;
 
+    // Get length of array
     for (i=0; (*oData)->sTraceFiles[i] != NULL; i++) continue;
 
     // Allocate space for file index + null index
@@ -68,29 +83,6 @@ void GetFileNames(char* sFileName, Data **oData) {
     for (j=0; j < strlen(sFileName); j++)
         (*oData)->sTraceFiles[i][j] = sFileName[j];
     (*oData)->sTraceFiles[i][j+1] = '\0';
-}
-
-/*
-FUNCTION:   GetFileNames(1)
-    1:      [obj]       'Data' struct
-PURPOSE:    Calculate supporting cache information.
-*/
-void CacheCalculations(Data **oData) {
-
-    // [Number of Blocks] = [Cache Size] / [Block Size]
-    (*oData)->iNumBlocks  = (*oData)->iCacheSize / (*oData)->iBlockSize;
-    // [Number of Rows]   = [Number of Blocks] / [Associativity]
-    (*oData)->iNumRows    = (*oData)->iNumBlocks / (*oData)->iAssociativity;
-    // [Index Bits]       = [log_2 of Number of Rows]
-    (*oData)->iIndexBits  = log2((*oData)->iNumRows);
-    // [Tag Bits]         = [32 Bit Bus] - [5 Bits Offset] - [Index Bits]
-    (*oData)->iTagBits    = 27 - (*oData)->iIndexBits;
-    // [Overhead]         = [Tag Size] + [Index Size]
-    (*oData)->iOverhead   = pow(2, (*oData)->iTagBits) + pow(2, (*oData)->iIndexBits);
-    // [Memory Size]      = [Cache Size] + [Overhead]
-    (*oData)->iMemorySize = (*oData)->iCacheSize + (*oData)->iOverhead;
-    // [Cost]             = [Implementation Memory Size (in KB)] * [$0.15 per KB]
-    (*oData)->dCost       = (double)((*oData)->iMemorySize / 1024) * 0.15;
 }
 
 /*
